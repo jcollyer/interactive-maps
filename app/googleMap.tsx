@@ -2,12 +2,12 @@
 
 import React, { useEffect } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
-import properties from './properties';
+import properties, {type PropertiyType} from './properties';
 
 export default function GoogleMaps() {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
-  function buildContent(property) {
+  function buildContent(property: PropertiyType) {
     const content = document.createElement("div");
     content.classList.add("property");
     content.innerHTML = `
@@ -41,7 +41,7 @@ export default function GoogleMaps() {
     return content;
   }
 
-  function toggleHighlight(markerView, property) {
+  function toggleHighlight(markerView:any, property:PropertiyType) {
     console.log(markerView);
     if (markerView.content.classList.contains("highlight")) {
       markerView.content.classList.remove("highlight");

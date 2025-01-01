@@ -1,3 +1,17 @@
+export type PropertiyType = {
+  address: string,
+  description: string,
+  price: string,
+  type: string,
+  bed: number,
+  bath: number,
+  size: number,
+  position: {
+    lat: number,
+    lng: number,
+  },
+};
+
 const properties = [{
   address: '215 Emily St, MountainView, CA',
   description: 'Single family house with modern design',
