@@ -1,11 +1,30 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import prisma from "@/lib/prisma";
 import { Loader } from '@googlemaps/js-api-loader';
-import properties, {type PropertiyType} from './properties';
+import properties, {type PropertiyType} from '@/app/properties';
+import { Building } from '@prisma/client';
 
-export default function GoogleMaps() {
+export const getStaticProps = async () => {
+  console.log('buildings===>',);
+  const buildings = await prisma.building.findMany({
+    where: { publish: true },
+  });
+
+
+
+  return {
+    props: { buildings },
+    revalidate: 10,
+  };
+};
+
+
+export default function GoogleMaps(props: Building[]) {
   const mapRef = React.useRef<HTMLDivElement>(null);
+
+  console.log('-------------',props);
 
   function buildContent(property: PropertiyType) {
     const content = document.createElement("div");
@@ -92,5 +111,5 @@ export default function GoogleMaps() {
     initializeMap();
   }, []);
 
-  return <div className="h-full" ref={mapRef} />;
+  return <div className="h-screen" ref={mapRef} />;
 }
