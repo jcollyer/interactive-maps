@@ -9,7 +9,7 @@ export default function Page() {
   const [file, setFile] = useState<File | undefined>(undefined)
   const [uploading, setUploading] = useState(false)
 
-  const Bucket = process.env.NEXT_PUBLIC_BUCKET_NAME;
+  const Bucket = "collyerdesign-recovery";
   const Key = file?.name;
   const Body = file;
 
