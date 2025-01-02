@@ -3,7 +3,6 @@
 import React, { useEffect } from 'react';
 import prisma from "@/lib/prisma";
 import { Loader } from '@googlemaps/js-api-loader';
-import properties, {type PropertiyType} from '@/app/properties';
 import { Building } from '@prisma/client';
 
 export const getStaticProps = async () => {
@@ -12,8 +11,6 @@ export const getStaticProps = async () => {
     where: { publish: true },
   });
 
-
-
   return {
     props: { buildings },
     revalidate: 10,
@@ -21,46 +18,29 @@ export const getStaticProps = async () => {
 };
 
 
-export default function GoogleMaps(props: Building[]) {
+export default function GoogleMaps({buildings}: {buildings: Building[]}) {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
-  console.log('-------------',props);
-
-  function buildContent(property: PropertiyType) {
+  function buildContent(property: Building) {
     const content = document.createElement("div");
     content.classList.add("property");
     content.innerHTML = `
       <div class="icon">
-          <i aria-hidden="true" class="fa fa-icon fa-${property.type}" title="${property.type}"></i>
-          <span class="fa-sr-only">${property.type}</span>
+        <i aria-hidden="true" class="fa fa-icon fa-building" title="building"></i>
+        <span class="fa-sr-only">building</span>
+        <img src="${property.image}" alt="Property Image" />
       </div>
       <div class="details">
-          <div class="price">${property.price}</div>
-          <div class="address">${property.address}</div>
-          <div class="features">
-          <div>
-              <i aria-hidden="true" class="fa fa-bed fa-lg bed" title="bedroom"></i>
-              <span class="fa-sr-only">bedroom</span>
-              <span>${property.bed}</span>
-          </div>
-          <div>
-              <i aria-hidden="true" class="fa fa-bath fa-lg bath" title="bathroom"></i>
-              <span class="fa-sr-only">bathroom</span>
-              <span>${property.bath}</span>
-          </div>
-          <div>
-              <i aria-hidden="true" class="fa fa-ruler fa-lg size" title="size"></i>
-              <span class="fa-sr-only">size</span>
-              <span>${property.size} ft<sup>2</sup></span>
-          </div>
-          </div>
+        
+          <div class="font-bold">${property.address}</div>
+          <div>${property.altName}</div>
       </div>
       `;
 
     return content;
   }
 
-  function toggleHighlight(markerView:any, property:PropertiyType) {
+  function toggleHighlight(markerView: any, property: Building) {
     console.log(markerView);
     if (markerView.content.classList.contains("highlight")) {
       markerView.content.classList.remove("highlight");
@@ -94,12 +74,12 @@ export default function GoogleMaps(props: Building[]) {
 
       const map = new Map(mapRef.current as HTMLDivElement, options);
 
-      for (const property of properties) {
+      for (const property of buildings) {
         const AdvancedMarkerElement = new google.maps.marker.AdvancedMarkerElement({
           map,
           content: buildContent(property),
-          position: property.position,
-          title: property.description,
+          position: {lat: property.lat || 0, lng: property.lng || 0},
+          title: property.address,
         });
 
         AdvancedMarkerElement.addListener("click", () => {

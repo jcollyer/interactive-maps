@@ -12,5 +12,7 @@ model Building {
   address String?
   image   String?
   altName String?
+  lat     Float?
+  lng     Float?
   publish Boolean @default(true)
 }
