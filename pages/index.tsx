@@ -6,7 +6,6 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { Building } from '@prisma/client';
 
 export const getStaticProps = async () => {
-  console.log('buildings===>',);
   const buildings = await prisma.building.findMany({
     where: { publish: true },
   });
@@ -21,7 +20,7 @@ export const getStaticProps = async () => {
 export default function GoogleMaps({buildings}: {buildings: Building[]}) {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
-  
+
   function buildContent(property: Building) {
     const content = document.createElement("div");
     content.classList.add("property");
