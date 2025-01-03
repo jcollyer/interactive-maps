@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, MouseEvent } from 'react'
+import { useEffect, useState, MouseEvent } from 'react'
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
+import { Loader } from '@googlemaps/js-api-loader';
 
 export default function Page() {
   const [file, setFile] = useState<File | undefined>(undefined)
@@ -15,7 +16,7 @@ export default function Page() {
   const [buildingLng, setBuildingLng] = useState("");
   const [publish, setPublish] = useState(false);
 
-  const create = async (e:MouseEvent<HTMLButtonElement>) => {
+  const create = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       const body = { buildingAddress, buildingAltName, buildingImage, buildingLat, buildingLng, publish };
@@ -73,9 +74,37 @@ export default function Page() {
   }
 
 
+  const searchLatAndLngByStreet = (street: string) => {
+
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'address': street }, (res, status) => {
+      console.log(res, status)
+      if (status == google.maps.GeocoderStatus.OK && res) {
+        console.log({
+          latitude: JSON.stringify(res[0].geometry.location.lat()),
+          longitude: JSON.stringify(res[0].geometry.location.lng())
+        })
+      }
+    });
+  }
+
+  useEffect(() => {
+    const getGeo = async () => {
+      const loader = new Loader({
+        apiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY as string,
+        version: 'quartely',
+      });
+
+      // Load the geocode library
+      await loader.importLibrary('geocoding') as google.maps.GeocodingLibrary;
+    };
+    getGeo(), []
+  });
+
   return (
     <main>
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
+        <input onChange={(e) => searchLatAndLngByStreet(e.target.value)} />
         <h1 className="font-semibold text-lg mb-10">Upload a File to S3</h1>
         {uploading && <p>Uploading...</p>}
         <form className="flex flex-col space-y-4">

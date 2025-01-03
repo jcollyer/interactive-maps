@@ -40,7 +40,6 @@ export default function GoogleMaps({buildings}: {buildings: Building[]}) {
   }
 
   function toggleHighlight(markerView: any, property: Building) {
-    console.log(markerView);
     if (markerView.content.classList.contains("highlight")) {
       markerView.content.classList.remove("highlight");
       markerView.zIndex = null;
@@ -60,7 +59,7 @@ export default function GoogleMaps({buildings}: {buildings: Building[]}) {
       // Load the map library
       const { Map } = await loader.importLibrary('maps');
 
-      // Loat the marker library
+      // Load the marker library
       await loader.importLibrary('marker') as google.maps.MarkerLibrary;
 
       const locationInMap = { lat: 37.43238031167444, lng: -122.16795397128632 };
