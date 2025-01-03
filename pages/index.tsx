@@ -20,7 +20,6 @@ export const getStaticProps = async () => {
 export default function GoogleMaps({buildings}: {buildings: Building[]}) {
   const mapRef = React.useRef<HTMLDivElement>(null);
 
-
   function buildContent(property: Building) {
     const content = document.createElement("div");
     content.classList.add("property");
