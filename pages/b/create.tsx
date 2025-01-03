@@ -24,7 +24,6 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      console.log("building created");
     } catch (error) {
       console.error(error);
     }
@@ -73,7 +72,7 @@ export default function Page() {
     setUploading(false)
   }
 
-  
+
   return (
     <main>
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
