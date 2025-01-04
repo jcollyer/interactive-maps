@@ -1,15 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useState, MouseEvent } from 'react'
+import { useCallback, useEffect, useState, useRef, MouseEvent } from 'react'
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
 import { Loader } from '@googlemaps/js-api-loader';
 import { useDropzone } from 'react-dropzone'
 
 export default function Page() {
-  const [file, setFile] = useState<File | undefined>(undefined)
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const mapPreviewRef = useRef<HTMLDivElement>(null);
 
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [buildingAddress, setBuildingAddress] = useState("");
   const [buildingAltName, setBuildingAltName] = useState("");
   const [buildingImageUrl, setBuildingImageUrl] = useState("");
@@ -95,9 +95,42 @@ export default function Page() {
 
       // Load the geocode library
       await loader.importLibrary('geocoding') as google.maps.GeocodingLibrary;
+      // Load the map library
+      const { Map } = await loader.importLibrary('maps');
+      // Load the marker library
+      await loader.importLibrary('marker') as google.maps.MarkerLibrary;
+
+
     };
     getGeo(), []
   });
+
+  const loadPreviewMap = async () => {
+    const locationInMap = { lat: Number(buildingLat), lng: Number(buildingLng) };
+    const loader = new Loader({
+      apiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY as string,
+      version: 'quartely',
+    });
+
+    const { Map } = await loader.importLibrary('maps');
+    const { AdvancedMarkerElement } = await loader.importLibrary("marker");
+    const map = new Map(mapPreviewRef.current as HTMLDivElement, {
+      center: locationInMap,
+      zoom: 16,
+      mapId: 'jc-interactive-map',
+    });
+    const tearDrop = document.createElement("div");
+    tearDrop.innerHTML = `<div className="flex w-12 h-12">
+      <div class="marker"></div>
+      <span class="beacon"></span>
+    </div>`;
+
+    return new AdvancedMarkerElement({
+      map,
+      position: locationInMap,
+      content: tearDrop,
+    });
+  };
 
   return (
     <main>
@@ -131,6 +164,7 @@ export default function Page() {
               onChange={(e) => {
                 setBuildingAddress(e.target.value);
                 searchLatAndLngByStreet(e.target.value);
+                loadPreviewMap();
               }}
               placeholder="building address"
               required
@@ -152,6 +186,7 @@ export default function Page() {
             <button type="submit" onClick={(e) => createBuilding(e)} disabled={uploadingImage} className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Submit</button>
           </div>
         </form>
+        <div className="w-full h-96 mt-6" ref={mapPreviewRef} />
       </div>
     </main>
   )
