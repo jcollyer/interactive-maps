@@ -1,38 +1,20 @@
 'use client'
 
-import { useEffect, useState, MouseEvent } from 'react'
+import { useCallback, useEffect, useState, MouseEvent } from 'react'
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
 import { Loader } from '@googlemaps/js-api-loader';
+import { useDropzone } from 'react-dropzone'
 
 export default function Page() {
   const [file, setFile] = useState<File | undefined>(undefined)
-  const [uploading, setUploading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const [buildingAddress, setBuildingAddress] = useState("");
   const [buildingAltName, setBuildingAltName] = useState("");
-  const [buildingImage, setBuildingImage] = useState("");
+  const [buildingImageUrl, setBuildingImageUrl] = useState("");
   const [buildingLat, setBuildingLat] = useState("");
   const [buildingLng, setBuildingLng] = useState("");
-  const [publish, setPublish] = useState(false);
-
-  const create = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    try {
-      const body = { buildingAddress, buildingAltName, buildingImage, buildingLat, buildingLng, publish };
-      await fetch("/api/building/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const Bucket = "collyerdesign-recovery";
-  const Key = file?.name;
-  const Body = file;
 
   const s3Client = new S3Client({
     region: process.env.NEXT_PUBLIC_AWS_REGION,
@@ -42,15 +24,13 @@ export default function Page() {
     }
   });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    handleSubmitImage(acceptedFiles[0])
+  }, [])
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop })
 
-    if (!file) {
-      alert('Please select a file to upload.')
-      return
-    }
-
-    setUploading(true)
+  const handleSubmitImage = async (image: File) => {
+    setUploadingImage(true)
 
     try {
       const parallelUploads3 = new Upload({
@@ -58,35 +38,53 @@ export default function Page() {
         // tags: [...], // optional tags
         queueSize: 4, // optional concurrency configuration
         leavePartsOnError: false, // optional manually handle dropped parts
-        params: { Bucket, Key, Body },
+        params: { Bucket: "collyerdesign-recovery", Key: image.name, Body: image },
       });
 
       parallelUploads3.on("httpUploadProgress", (progress: Progress) => {
         console.log(progress);
       });
 
-      await parallelUploads3.done();
+      const response = await parallelUploads3.done();
+      setBuildingImageUrl(response.Location || "");
+      return response.Location;
     } catch (e) {
       console.log(e);
+    } finally {
+      setUploadingImage(false)
     }
-
-    setUploading(false)
   }
 
-
   const searchLatAndLngByStreet = (street: string) => {
-
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ 'address': street }, (res, status) => {
       console.log(res, status)
       if (status == google.maps.GeocoderStatus.OK && res) {
-        console.log({
-          latitude: JSON.stringify(res[0].geometry.location.lat()),
-          longitude: JSON.stringify(res[0].geometry.location.lng())
-        })
+        setBuildingLat(JSON.stringify(res[0].geometry.location.lat()));
+        setBuildingLng(JSON.stringify(res[0].geometry.location.lng()));
       }
     });
   }
+
+  const createBuilding = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    try {
+      const body = { address: buildingAddress, altName: buildingAltName, image: buildingImageUrl, lat: Number(buildingLat), lng: Number(buildingLng), publish: true };
+      await fetch("/api/building/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setBuildingAddress("");
+      setBuildingAltName("");
+      setBuildingImageUrl("");
+      setBuildingLat("");
+      setBuildingLng("");
+    }
+  };
 
   useEffect(() => {
     const getGeo = async () => {
@@ -105,36 +103,43 @@ export default function Page() {
     <main>
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
         <input onChange={(e) => searchLatAndLngByStreet(e.target.value)} />
-        <h1 className="font-semibold text-lg mb-10">Upload a File to S3</h1>
-        {uploading && <p>Uploading...</p>}
-        <form className="flex flex-col space-y-4">
-          <input
-            id="file"
-            type="file"
-            onChange={(e) => {
-              const files = e.target.files
-              if (files) {
-                setFile(files[0])
-              }
-            }}
-            accept="image/png, image/jpeg"
-          />
-          <div>
+        <h1 className="font-semibold text-lg mb-10">Upload a new building</h1>
+
+
+        <div {...getRootProps()} className="flex w-96 min-h-24 border-2 p-2 border-gray-300 border-dashed rounded-lg items-center justify-center">
+          {uploadingImage && (<div className="px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">loading...</div>)}
+          {!uploadingImage && (
+            <div className="p-2"> <input {...getInputProps()} />
+              {
+                isDragActive ?
+                  <p>Drop the files here ...</p> :
+                  <p>Drop or click to select files</p>
+              }</div>
+          )}
+          <div>{buildingImageUrl && <img src={buildingImageUrl} alt="building" className="w-32" />}</div>
+        </div>
+
+
+        <form className="flex flex-col space-y-4 mt-6 w-96">
+          <div className="flex">
             <label htmlFor="building-address">Address</label>
             <input
-              className="border border-gray-300 p-1 rounded ml-2"
+              className="flex-1 border border-gray-300 p-1 rounded ml-2"
               id="building-address"
               type="text"
               value={buildingAddress}
-              onChange={(e) => setBuildingAddress(e.target.value)}
+              onChange={(e) => {
+                setBuildingAddress(e.target.value);
+                searchLatAndLngByStreet(e.target.value);
+              }}
               placeholder="building address"
               required
             />
           </div>
-          <div>
+          <div className="flex">
             <label htmlFor="building-altName">Alternative Name</label>
             <input
-              className="border border-gray-300 p-1 rounded ml-2"
+              className="flex-1 border border-gray-300 p-1 rounded ml-2"
               id="building-altName"
               type="text"
               value={buildingAltName}
@@ -143,69 +148,8 @@ export default function Page() {
               required
             />
           </div>
-          <div>
-            <div>
-              <label htmlFor="building-image">building Image</label>
-              <input
-                className="border border-gray-300 p-1 rounded ml-2"
-                id="building-image"
-                type="text"
-                value={buildingImage}
-                onChange={(e) => setBuildingImage(e.target.value)}
-                placeholder="building image"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <div>
-              <label htmlFor="building-lat">building Lat</label>
-              <input
-                className="border border-gray-300 p-1 rounded ml-2"
-                id="building-lat"
-                type="number"
-                value={buildingLat}
-                onChange={(e) => setBuildingLat(e.target.value)}
-                placeholder="building lat"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <div>
-              <label htmlFor="building-lng">building Lng</label>
-              <input
-                className="border border-gray-300 p-1 rounded ml-2"
-                id="building-lng"
-                type="number"
-                value={buildingLng}
-                onChange={(e) => setBuildingLng(e.target.value)}
-                placeholder="building lng"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label>
-              <input
-                className="mr-2"
-                type="checkbox"
-                checked={publish}
-                onChange={(e) => {
-                  e.preventDefault();
-                  setPublish(!publish);
-                }}
-              />
-              <span>Publish Immediately?</span>
-            </label>
-          </div>
-          <div>
-            <div className="flex gap-4">
-              <button type="submit" onClick={(e) => create(e)} disabled={uploading} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Submit</button>
-              <button onClick={() => console.log("cancel")} type="button">
-                Cancel
-              </button>
-            </div>
+          <div className="flex gap-4 w-full">
+            <button type="submit" onClick={(e) => createBuilding(e)} disabled={uploadingImage} className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Submit</button>
           </div>
         </form>
       </div>
