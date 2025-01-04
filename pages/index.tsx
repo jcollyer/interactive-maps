@@ -24,15 +24,17 @@ export default function GoogleMaps({ buildings }: { buildings: Building[] }) {
   function buildContent(property: Building) {
     const content = document.createElement("div");
     content.classList.add("property");
+    content.classList.add("max-w-36");
+    
     content.innerHTML = `
-    <div class="flex flex-col p-2">
-      <div class="details">
+    <div class="flex flex-col">
+      <div class="details p-2">
         <div class="font-bold">${property.address}</div>
         <div>${property.altName}</div>
       </div>
-      <div class="relative bg-blue-600 p-1 rounded">
+      <div class="relative p-[2px]">
         <i aria-hidden="true" class="fa fa-icon fa-building" title="building"></i>
-        <img src="${property.image}" alt="Property Image" />
+        <img class="w-full" src="${property.image}" alt="Property Image" />
         <div class="arrow">&nbsp;</div>
       </div>
     </div>
@@ -84,7 +86,7 @@ export default function GoogleMaps({ buildings }: { buildings: Building[] }) {
 
         AdvancedMarkerElement.addListener("click", () => {
           toggleHighlight(AdvancedMarkerElement, property);
-          setClipboard((prev) => [...prev, property.address, ...(!!property.altName && [property.altName] || [])]);
+          setClipboard((prev) => [...prev, ...(!prev.includes(property.address) && [property.address]) || [], ...(!!property.altName && !prev.includes(property.altName) && [property.altName] || [])]);
         });
       }
     }
@@ -97,16 +99,16 @@ export default function GoogleMaps({ buildings }: { buildings: Building[] }) {
       <div className="h-screen" ref={mapRef} />
       <div className="fixed bottom-0 p-4 bg-white w-full">
         <div className="flex">
-        <div><h3 className="font-semibold">Copy Board</h3></div>
-        <div className="flex gap-2 ml-auto">
-          <button className="border px-4 py-1 rounded bg-blue-600 text-white" onClick={() => navigator.clipboard.writeText(clipboard.map(address => address).join(","))}>Copy</button>
-          <button className="border px-4 py-1 rounded"onClick={() => setClipboard([])}>Clear</button>
-        </div>
-        </div>
-        <div className="flex gap-2">
-          {clipboard.map((address, index) => (
-            <div key={index}>{address},</div>
-          ))}
+          {clipboard.length === 0 && (<div><p className="font-semibold text-sm">Copy Board</p></div>)}
+          <div className="flex items-center gap-2 overflow-scroll">
+            {clipboard.map((address, index) => (
+              <div key={index} className="whitespace-nowrap">{address},</div>
+            ))}
+          </div>
+          <div className="flex gap-2 ml-auto" style={{boxShadow: "-20px 0px 18px 10px white"}}>
+            <button className="border px-4 py-1 rounded bg-blue-600 text-white" onClick={() => navigator.clipboard.writeText(clipboard.map(address => address).join(","))}>Copy</button>
+            <button className="border px-4 py-1 rounded" onClick={() => setClipboard([])}>Clear</button>
+          </div>
         </div>
       </div>
     </main>

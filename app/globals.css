@@ -34,14 +34,23 @@ body {
   padding: 0;
 }
 
-/*
- * Property styles in unhighlighted state.
- */
 .property {
+  background-color: rgb(37, 99, 235);
+  color: white;
+  border-radius: 4px;
+}
+
+.property .details {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
+.property.highlight .details {
   display: flex;
 }
 
-.arrow{
+.arrow {
   height: 20px;
   width: 20px;
   background-color: rgb(37, 99, 235);
@@ -51,24 +60,6 @@ body {
   bottom: -8px;
   z-index: -1;
 }
-
-.property .details {
-  display: none;
-  flex-direction: column;
-  flex: 1;
-}
-
-.property.highlight {
-  background-color: rgb(37, 99, 235);
-  color: white;
-  border-radius: 8px;
-  box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.2);
-}
-
-.property.highlight .details {
-  display: flex;
-}
-
 
 .marker {
   transform: perspective(40px) rotateX(20deg) rotateZ(-45deg);

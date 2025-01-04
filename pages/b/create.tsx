@@ -96,7 +96,7 @@ export default function Page() {
       // Load the geocode library
       await loader.importLibrary('geocoding') as google.maps.GeocodingLibrary;
       // Load the map library
-      const { Map } = await loader.importLibrary('maps');
+      await loader.importLibrary('maps');
       // Load the marker library
       await loader.importLibrary('marker') as google.maps.MarkerLibrary;
 
