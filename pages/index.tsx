@@ -88,6 +88,14 @@ export default function GoogleMaps({ buildings }: { buildings: Building[] }) {
           toggleHighlight(AdvancedMarkerElement, property);
           setClipboard((prev) => [...prev, ...(!prev.includes(property.address) && [property.address]) || [], ...(!!property.altName && !prev.includes(property.altName) && [property.altName] || [])]);
         });
+
+        map.addListener('zoom_changed', () => {
+          const zoom = map.getZoom();
+          if (zoom) {
+              // Only show each marker above a certain zoom level.
+              AdvancedMarkerElement.map = zoom > 14 ? map : null;
+          }
+      });
       }
     }
     // Initialize the map on component mount

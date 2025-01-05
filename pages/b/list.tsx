@@ -46,7 +46,7 @@ export default function ListBuildings({ buildings }: { buildings: Building[] }) 
   }
 
   return (
-    <main className="container mx-auto">
+    <main className="container mx-auto pt-16">
       <h1 className="text-lg font-semibold py-2">Buildings</h1>
       <div className="flex flex-col gap-2">
         {allBuildings.map((building) => {
