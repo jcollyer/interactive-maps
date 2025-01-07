@@ -84,18 +84,26 @@ export default function GoogleMaps({ buildings }: { buildings: Building[] }) {
           title: property.address,
         });
 
+
+        const pin = new google.maps.marker.AdvancedMarkerElement({
+          map,
+          position: { lat: property.lat || 0, lng: property.lng || 0 },
+          title: 'This marker is visible at zoom level 14 and lower.'
+      });
+
         AdvancedMarkerElement.addListener("click", () => {
           toggleHighlight(AdvancedMarkerElement, property);
           setClipboard((prev) => [...prev, ...(!prev.includes(property.address) && [property.address]) || [], ...(!!property.altName && !prev.includes(property.altName) && [property.altName] || [])]);
         });
 
-        map.addListener('zoom_changed', () => {
+        map.addListener('idle', () => {
           const zoom = map.getZoom();
-          if (zoom) {
-              // Only show each marker above a certain zoom level.
-              AdvancedMarkerElement.map = zoom > 14 ? map : null;
+          // Only show each marker above a certain zoom level.
+          if(zoom) {
+            AdvancedMarkerElement.map = zoom > 14 ? map : null;
+            pin.map = zoom <= 14 ? map : null;
           }
-      });
+        });
       }
     }
     // Initialize the map on component mount
