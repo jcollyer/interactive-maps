@@ -7,6 +7,7 @@ import { Loader } from '@googlemaps/js-api-loader';
 import { useDropzone } from 'react-dropzone'
 import prisma from "@/lib/prisma";
 import { Building } from '@prisma/client';
+import DebouncedInput from '@/app/components/DebounceInput';
 
 export const getStaticProps = async () => {
   const buildings = await prisma.building.findMany({
@@ -28,7 +29,6 @@ export default function Page({ buildings }: { buildings: Building[] }) {
   const [buildingImageUrl, setBuildingImageUrl] = useState<string>("");
   const [buildingLat, setBuildingLat] = useState<string>("");
   const [buildingLng, setBuildingLng] = useState<string>("");
-  const [allBuildings, setAllBuildings] = useState<Building[]>(buildings);
   const [addressAlreadyInUse, setAddressAlreadyInUse] = useState<boolean>(false);
 
 
@@ -82,7 +82,7 @@ export default function Page({ buildings }: { buildings: Building[] }) {
     });
 
     // Warn user if address is already in use
-    allBuildings.some(building => building.address === street) ? setAddressAlreadyInUse(true) : setAddressAlreadyInUse(false);
+    buildings.some(building => building.address === street) ? setAddressAlreadyInUse(true) : setAddressAlreadyInUse(false);
   }
 
   const createBuilding = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -154,7 +154,6 @@ export default function Page({ buildings }: { buildings: Building[] }) {
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
         <input onChange={(e) => searchLatAndLngByStreet(e.target.value)} />
         <h1 className="font-semibold text-lg mb-10">Upload a new building</h1>
-
         <div {...getRootProps()} className="flex w-96 min-h-24 border-2 p-2 border-gray-300 border-dashed rounded-lg items-center justify-center">
           {uploadingImage && (<div className="px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">loading...</div>)}
           {!uploadingImage && (
@@ -167,25 +166,23 @@ export default function Page({ buildings }: { buildings: Building[] }) {
           )}
           <div>{buildingImageUrl && <img src={buildingImageUrl} alt="building" className="w-32" />}</div>
         </div>
-
-
         <form className="flex flex-col space-y-4 mt-6 w-96">
           <div className="flex">
             <label htmlFor="building-address">Address</label>
-            <input
-              className="flex-1 border border-gray-300 p-1 rounded ml-2"
+            <DebouncedInput
               id="building-address"
               type="text"
               value={buildingAddress}
-              onChange={(e) => {
-                setBuildingAddress(e.target.value);
-                searchLatAndLngByStreet(e.target.value);
+              onChange={(value) => {
+                setBuildingAddress(value);
+                searchLatAndLngByStreet(value);
                 loadPreviewMap();
               }}
               placeholder="building address"
               required
             />
           </div>
+          {addressAlreadyInUse && <p className="text-red-500">Address already in use</p>}
           <div className="flex">
             <label htmlFor="building-altName">Alternative Name</label>
             <input
