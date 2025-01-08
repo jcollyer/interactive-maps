@@ -1,20 +1,36 @@
 'use client'
 
-import { useCallback, useEffect, useState, useRef, MouseEvent } from 'react'
+import { useCallback, useEffect, useState, useRef, MouseEvent, use } from 'react'
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
 import { Loader } from '@googlemaps/js-api-loader';
 import { useDropzone } from 'react-dropzone'
+import prisma from "@/lib/prisma";
+import { Building } from '@prisma/client';
 
-export default function Page() {
+export const getStaticProps = async () => {
+  const buildings = await prisma.building.findMany({
+    where: { publish: true },
+  });
+
+  return {
+    props: { buildings },
+    revalidate: 10,
+  };
+};
+
+export default function Page({ buildings }: { buildings: Building[] }) {
   const mapPreviewRef = useRef<HTMLDivElement>(null);
 
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [buildingAddress, setBuildingAddress] = useState("");
-  const [buildingAltName, setBuildingAltName] = useState("");
-  const [buildingImageUrl, setBuildingImageUrl] = useState("");
-  const [buildingLat, setBuildingLat] = useState("");
-  const [buildingLng, setBuildingLng] = useState("");
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false)
+  const [buildingAddress, setBuildingAddress] = useState<string>("");
+  const [buildingAltName, setBuildingAltName] = useState<string>("");
+  const [buildingImageUrl, setBuildingImageUrl] = useState<string>("");
+  const [buildingLat, setBuildingLat] = useState<string>("");
+  const [buildingLng, setBuildingLng] = useState<string>("");
+  const [allBuildings, setAllBuildings] = useState<Building[]>(buildings);
+  const [addressAlreadyInUse, setAddressAlreadyInUse] = useState<boolean>(false);
+
 
   const s3Client = new S3Client({
     region: process.env.NEXT_PUBLIC_AWS_REGION,
@@ -64,6 +80,9 @@ export default function Page() {
         setBuildingLng(JSON.stringify(res[0].geometry.location.lng()));
       }
     });
+
+    // Warn user if address is already in use
+    allBuildings.some(building => building.address === street) ? setAddressAlreadyInUse(true) : setAddressAlreadyInUse(false);
   }
 
   const createBuilding = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -99,8 +118,6 @@ export default function Page() {
       await loader.importLibrary('maps');
       // Load the marker library
       await loader.importLibrary('marker') as google.maps.MarkerLibrary;
-
-
     };
     getGeo(), []
   });
@@ -137,7 +154,6 @@ export default function Page() {
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
         <input onChange={(e) => searchLatAndLngByStreet(e.target.value)} />
         <h1 className="font-semibold text-lg mb-10">Upload a new building</h1>
-
 
         <div {...getRootProps()} className="flex w-96 min-h-24 border-2 p-2 border-gray-300 border-dashed rounded-lg items-center justify-center">
           {uploadingImage && (<div className="px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">loading...</div>)}
