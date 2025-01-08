@@ -167,7 +167,7 @@ export default function Page({ buildings }: { buildings: Building[] }) {
           <div>{buildingImageUrl && <img src={buildingImageUrl} alt="building" className="w-32" />}</div>
         </div>
         <form className="flex flex-col space-y-4 mt-6 w-96">
-          <div className="flex">
+          <div className="flex gap-2">
             <label htmlFor="building-address">Address</label>
             <DebouncedInput
               id="building-address"
@@ -183,10 +183,10 @@ export default function Page({ buildings }: { buildings: Building[] }) {
             />
           </div>
           {addressAlreadyInUse && <p className="text-red-500">Address already in use</p>}
-          <div className="flex">
+          <div className="flex gap-2">
             <label htmlFor="building-altName">Alternative Name</label>
             <input
-              className="flex-1 border border-gray-300 p-1 rounded ml-2"
+              className="flex-1 border border-gray-300 p-1 rounded"
               id="building-altName"
               type="text"
               value={buildingAltName}

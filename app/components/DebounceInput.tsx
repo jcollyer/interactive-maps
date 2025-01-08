@@ -32,7 +32,7 @@ const DebouncedInput: FC<DebouncedInputProps> = ({
     <input
       {...props}
       value={value}
-      className="flex-1 border border-gray-300 p-1 rounded ml-2"
+      className="flex-1 border border-gray-300 p-1 rounded w-full"
       onChange={(e) => setValue(e.target.value)}
     />
   );

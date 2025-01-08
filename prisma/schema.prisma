@@ -9,10 +9,10 @@ datasource db {
 
 model Building {
   id      String  @id @default(cuid())
-  address String?
-  image   String?
+  address String
+  image   String
   altName String?
-  lat     Float?
-  lng     Float?
+  lat     Float
+  lng     Float
   publish Boolean @default(true)
 }
