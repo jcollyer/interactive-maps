@@ -39,11 +39,11 @@ export default function ListBuildings({ buildings }: { buildings: Building[] }) 
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        {!!searchResults.length && searchResults.map((building) =>
+        {!!search.length && searchResults.map((building) =>
           <BuildingRow building={building} allBuildings={allBuildings} singleBuilding={singleBuilding} setSingleBuilding={setSingleBuilding} setAllBuildings={setAllBuildings} />
         )}
 
-        {!searchResults.length && allBuildings.map((building) =>
+        {!search.length && allBuildings.map((building) =>
           <BuildingRow building={building} allBuildings={allBuildings} singleBuilding={singleBuilding} setSingleBuilding={setSingleBuilding} setAllBuildings={setAllBuildings} />
         )}
       </div>
