@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, useRef, MouseEvent, use } from 'react'
+import { useCallback, useEffect, useState, useRef, MouseEvent } from 'react'
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload, Progress } from "@aws-sdk/lib-storage";
 import { Loader } from '@googlemaps/js-api-loader';
